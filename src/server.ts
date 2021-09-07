@@ -1,4 +1,5 @@
 import express from 'express';
+import {Request, Response, NextFunction} from 'express';
 import axios from 'axios';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
@@ -30,45 +31,31 @@ import { url } from 'inspector';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
-   app.get("/filteredImage", async(req, res) => {
+   app.get("/filteredImage", async(req: Request, res: Response, next : NextFunction) => {
 
     const {image_url} = req.query;
+    
     if(!image_url)
     return res.status(400).send({message : "no download url detected"});
 
-    
-    const media = await filterImageFromURL(image_url.toString());
+    try{
+      const media : string = await filterImageFromURL(image_url.toString());
     return res.status(200).sendFile(media, async () =>{
       await deleteLocalFiles([media]);
 
     });
-    //res.on('finish', () => deleteLocalFiles([media]));
+    }catch(e){
+      return res.status(422).send({message: "invalid image url"});
+    }
+   
    })
   //! END @TODO1
 
   //simple test for image presence
-  async function verifyimage(url : string) {
-    try {
-      let res = await axios({
-        method: 'get',
-        url: url,
-        //data: reqBody
-      });
   
-      let data = res.data;
-      return data;
-    } catch (error) {
-      //console.log(error); // this is the main part. Use the response property from the error object
-  
-      return error;
-    }
-  
-  }
-
-
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
+  app.get( "/", async ( req : Request, res : Response ) => {
     return res.status(200).send("try GET /filteredimage?image_url={{}}");
         
   } );
